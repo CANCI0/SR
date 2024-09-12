@@ -1,6 +1,6 @@
 # 🦾 Software para Robots
 
-![Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Uniovi_Escudo.svg/600px-Uniovi_Escudo.svg.png)
+![Logo](https://www.google.com/url?sa=i&url=https%3A%2F%2Fingenieriainformatica.uniovi.es%2F&psig=AOvVaw2yq1-xbe7Z8V2HmuxBCstr&ust=1726260347005000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKix-IejvogDFQAAAAAdAAAAABAE))
 
 > **Grado en Ingeniería de Software**  
 > Universidad de Oviedo - Escuela de Ingeniería Informática  
