@@ -3,7 +3,6 @@
 > **Grado en Ingeniería de Software**  
 > Universidad de Oviedo - Escuela de Ingeniería Informática  
 > Asignatura: **Software para Robots**  
-> Profesor: [Nombre del Profesor]  
 > Año académico: 2024/2025
 
 ---
