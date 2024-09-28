@@ -1,3 +1,5 @@
+//Autor: Martín Cancio Barrera, UO287561
+
 cylinder_faces = 25;
 
 module legPartv3(){

@@ -1,3 +1,5 @@
+//Autor: Martín Cancio Barrera, UO287561
+
 square_holeX= 12.5;
 square_holeY= 23.5;
 square_holeZ= 23.5;

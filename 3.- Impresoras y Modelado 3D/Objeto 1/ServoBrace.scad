@@ -1,3 +1,5 @@
+//Autor: Martín Cancio Barrera, UO287561
+
 centralPanelX = 30;
 centralPanelY = 2;
 centralPanelZ = 23.5;

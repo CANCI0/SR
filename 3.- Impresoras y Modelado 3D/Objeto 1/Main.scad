@@ -5,6 +5,8 @@ use <LegPart-v3.scad>
 use <PhoneHolder.scad>
 use <ServoBrace.scad>
 
+//Autor: Martín Cancio Barrera, UO287561
+
 translate([44,0,0])
   foot();
   
