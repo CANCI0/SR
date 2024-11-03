@@ -21,14 +21,14 @@ int pin_servo_right = 9;
 int sensor_left_inner = 2;
 int sensor_right_inner = 3;
 
-int sensor_left_outer = 11;
-int sensor_right_outer = 7;
+int sensor_left_outer = 10;
+int sensor_right_outer = 11;
 
-int LEFT_FORWARD = 180;
-int RIGHT_FORWARD = 0;
+int LEFT_FORWARD = 0;
+int RIGHT_FORWARD = 180;
 int STOP = 90;
-int LEFT_BACKWARD = 0;
-int RIGHT_BACKWARD = 180;
+int LEFT_BACKWARD = 180;
+int RIGHT_BACKWARD = 0;
 
 int initial_millis;
 int actual_millis;
@@ -54,32 +54,18 @@ void loop() {
 
   if (left_inner == LINE && right_inner == LINE && left_outer == NO_LINE && right_outer == NO_LINE) {
     forward();
-  } if (left_inner == LINE && right_inner == NO_LINE && left_outer == NO_LINE && right_outer == NO_LINE) {
+  } else if (left_inner == LINE && right_inner == NO_LINE && left_outer == NO_LINE && right_outer == NO_LINE) {
     turn_left();
-  } if (left_inner == NO_LINE && right_inner == LINE && left_outer == NO_LINE && right_outer == NO_LINE) {
+  } else if (left_inner == NO_LINE && right_inner == LINE && left_outer == NO_LINE && right_outer == NO_LINE) {
     turn_right();
-  }
-
-  if (left_inner == LINE && right_inner == LINE && left_outer == LINE && right_outer == LINE) {
+  } else if (left_inner == LINE && right_inner == LINE && right_outer == LINE && left_outer == NO_LINE) {
     forward();
-    delay(250);
-    if (digitalRead(sensor_left_inner) == LINE && digitalRead(sensor_right_inner) == LINE && digitalRead(sensor_left_outer) == LINE && digitalRead(sensor_right_outer) == LINE) {
-      exit(0);
-    } else if (digitalRead(sensor_left_inner) == NO_LINE && digitalRead(sensor_right_inner) == NO_LINE && digitalRead(sensor_left_outer) == NO_LINE && digitalRead(sensor_right_outer) == NO_LINE) {
-      stop();
-      delay(100);
-      backwards();
-      delay(100);
-    }
-  }
-
-  if (left_inner == NO_LINE && right_inner == NO_LINE && left_outer == NO_LINE && right_outer == NO_LINE) {
-    backwards();
     delay(200);
+    turn_90_right();
+  } else if (left_inner == NO_LINE && right_inner == NO_LINE && left_outer == NO_LINE && right_outer == NO_LINE) {
     turn_180();
-  }
-
-  if (left_inner == LINE && right_inner == LINE && right_outer == LINE && left_outer == NO_LINE) {
+    forward();
+  } else if (left_inner == LINE && right_inner == LINE && left_outer == LINE && right_outer == LINE) {
     forward();
     delay(200);
     turn_90_right();
@@ -89,14 +75,14 @@ void loop() {
 void turn_90_right() {
   servo_right.write(RIGHT_BACKWARD);
   servo_left.write(LEFT_FORWARD);
-  delay(850);
+  delay(500);
   stop();
 }
 
 void turn_180() {
   servo_right.write(RIGHT_FORWARD);
   servo_left.write(LEFT_BACKWARD);
-  delay(1800);
+  delay(1000);
   stop();
 }
 
