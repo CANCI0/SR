@@ -15,8 +15,8 @@ Servo servo_right;
 int LINE = HIGH;
 int NO_LINE = LOW;
 
-int pin_servo_left = 8;
-int pin_servo_right = 9;
+int pin_servo_left = 9;
+int pin_servo_right = 8;
 
 int sensor_left_inner = 2;
 int sensor_right_inner = 3;

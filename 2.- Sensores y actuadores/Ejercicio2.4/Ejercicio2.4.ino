@@ -98,6 +98,9 @@ bool isPassword(){
     digitalWrite(greenLed, HIGH);
     delay(5000);
     
+    while ( ultrasound() ) {
+      delay(5000);
+    }
     
     digitalWrite(greenLed, LOW);
     digitalWrite(redLed, HIGH);
@@ -112,7 +115,9 @@ bool ultrasound(){
   if(cm <= 10){
     millisTime = millis();
     result = 0;
+    return true;
   }
+  return false;
 }
 
 int ping(int trig, int echo) {

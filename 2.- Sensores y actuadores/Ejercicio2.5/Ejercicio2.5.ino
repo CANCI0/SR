@@ -1,5 +1,5 @@
 /*
-  Ejercicio 2.4 - Cierre Automático con ultrasonidos (0,30 puntos)
+  Contador2.5 Apertura y cierre automático con contador de entradas (0,35 puntos) 
   *****************************************************************************
   GRUPO 5:
    - Olga Alonso Grela      UO288066
@@ -12,6 +12,7 @@
 // pins
 int redLed = 9;
 int greenLed = 8;
+int foto = A5;
 
 int trig = 11;
 int echo = 10;
@@ -24,10 +25,12 @@ const byte cols = 4;
 bool open = false;
 
 // Matriz mapping keypad
-char keys[rows][cols] = {{'1','2','3','A'},
-                          {'4','5','6','B'},
-                          {'7','8','9','C'},
-                          {'*','0','#','D'}};
+char keys[rows][cols] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
 
 byte pinsRow[rows] = {2, 3, 4, 5};
 byte pinsCol[cols] = {A0, A1, A2, A3};
@@ -90,15 +93,28 @@ bool isPassword(){
     digitalWrite(redLed, LOW);
     delay(500);
     digitalWrite(redLed, HIGH);
-
   } else {
     digitalWrite(greenLed, LOW);
     digitalWrite(redLed, LOW);
     delay(1000);
     digitalWrite(greenLed, HIGH);
-    delay(5000);
+
     
-    
+    while (true) { 
+      int lightValue = analogRead(A5);
+      int ultra = ultrasound();
+      Serial.println(lightValue);
+      Serial.println(ultra);
+      if(lightValue < 200 && !ultra){
+        digitalWrite(greenLed, LOW);
+        digitalWrite(redLed, HIGH);
+        break;
+      } else if(lightValue > 200 && !ultra){
+        delay(5000);
+        break;
+      }     
+    }
+
     digitalWrite(greenLed, LOW);
     digitalWrite(redLed, HIGH);
   }
@@ -112,7 +128,9 @@ bool ultrasound(){
   if(cm <= 10){
     millisTime = millis();
     result = 0;
+    return true;
   }
+  return false;
 }
 
 int ping(int trig, int echo) {
