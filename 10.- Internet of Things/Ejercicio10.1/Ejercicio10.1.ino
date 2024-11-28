@@ -19,9 +19,6 @@ IPAddress subnet(255, 255, 255, 0);
 IPAddress ip(192, 168, 61, completar);
 
 // Variables para los datos del sensor
-const double latitude = 43.36029;
-const double longitude = -5.84476;
-
 float temperature = 0.0;
 float humidity = 0.0;
 
@@ -39,8 +36,6 @@ void handleClient(EthernetClient client) {
   if (request.indexOf("GET / ") >= 0) {
     // Responder con datos del sensor en formato JSON
     String json = "{";
-    json += "\"latitude\": " + String(latitude, 6) + ",";
-    json += "\"longitude\": " + String(longitude, 6) + ",";
     json += "\"temperature\": " + String(temperature) + ",";
     json += "\"humidity\": " + String(humidity) + "}";
     client.println("HTTP/1.1 200 OK");
