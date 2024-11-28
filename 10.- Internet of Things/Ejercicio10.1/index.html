@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Red de Sensores</title>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { height: 400px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h1>Red de Sensores de Oviedo</h1>
+  <div id="map"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>IP</th>
+        <th>Temperatura (°C)</th>
+        <th>Humedad (%)</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="sensor-table"></tbody>
+  </table>
+
+  <script>
+    const map = L.map('map').setView([43.3603, -5.8448], 13); // Coordenadas de Oviedo
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const fetchData = () => {
+      fetch('http://localhost:8080/sensors')
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.getElementById('sensor-table');
+          tableBody.innerHTML = '';
+
+          Object.keys(data).forEach(ip => {
+            const sensor = data[ip];
+            L.marker([43.36, -5.84]).addTo(map).bindPopup(`Nombre: ${sensor.name}<br>IP: ${sensor.ip}<br>Temp: ${sensor.temperature}°C<br>Hum: ${sensor.humidity}%<br><button>Encender</button><button>Apagar</button>`);
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${sensor.name}</td>
+              <td>${sensor.ip}</td>
+              <td>${sensor.temperature}</td>
+              <td>${sensor.humidity}</td>
+              <td>${sensor.temperature > 30 ? 'Alerta' : 'Normal'}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        });
+    };
+
+    setInterval(fetchData, 2000); // Actualizar cada 2 segundos
+  </script>
+</body>
+</html>
