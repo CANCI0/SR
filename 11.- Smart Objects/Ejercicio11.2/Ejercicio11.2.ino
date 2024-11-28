@@ -19,6 +19,8 @@ char WEPkeyIndex[] = "";
 char WEPkey[] = "";
 int keyIndex = 0;
 int status = WL_IDLE_STATUS; 
+int TURN_ON = 1;
+int TURN_OFF;
 
 WiFiServer servidor(80); 
 IPAddress dnsServer(8, 8, 8, 8);
@@ -27,7 +29,7 @@ IPAddress subnet(255, 255, 255, 0);
 
 IPAddress ip(192, 168, 61, 43);
 
-WiFiClient cliente = servidor.available();
+WiFiClient cliente;
 
 int sensor = A1;
 int led = 9;
@@ -43,18 +45,14 @@ const int updateThingSpeakInterval = 20 * 1000;
 char thingSpeakAddress[] = "api.thingspeak.com";
 
 long lastConnectionTime = 0;
-boolean lastConnected = false;
 
 void setup() {
   Serial.begin(9600);
   Ethernet.begin(mac, ip, dnsServer, gateway, subnet);
   servidor.begin();
-  Serial.println("Setup");
   
-  Serial.println(Ethernet.localIP());
-
   pinMode(led, OUTPUT);
-  digitalWrite(led, HIGH);
+  digitalWrite(led, LOW);
 
   pinMode(sensor, INPUT);
 
@@ -63,115 +61,89 @@ void setup() {
 
 void loop() {
   if (cliente || millis() - lastConnectionTime > updateThingSpeakInterval) {
-    Serial.println("Nueva peticion");
-    String peticion = "";
-    float luz = analogRead(A1);
+    float luz = analogRead(sensor);
     long aux = millis();
+    
     if (aux - lastConnectionTime > updateThingSpeakInterval) {
-      updateThingSpeak("field1=" + String(luz), cliente);
-      Serial.println(luz);
+      updateThingSpeak("field1=" + String(luz));
+      Serial.println("Sensor de luz: " + String(luz));
     }
 
-    String tbURI = String("/talkbacks/") + number + String("/commands/execute");
-
-    String postMessage =  String("api_key=") + apiKeyTalkBack;
-
+    String tbURI = String("/talkbacks/") + String(number) + String("/commands/execute");
+  
+    // Crear el cuerpo del mensaje para el POST
+    String postMessage = String("api_key=") + String(apiKeyTalkBack);                      
+                        
+    // Crear una cadena para cualquier comando recibido
     String newCommand = String();
 
-    int x = updateLed(tbURI, postMessage, newCommand, cliente);
-
+    // Realizar el POST a ThingSpeak
+    int x = httpPOST(tbURI, postMessage, newCommand);
+    
     if (x == 200) {
-      Serial.println("checking queue...");
-
-      Serial.print("  Latest command from queue: ");
-      Serial.println(newCommand);
-
+      Serial.println("Revisando cola de comandos...");
       if (newCommand == "encender") {
-        digitalWrite(led, HIGH);
+          Serial.println("Encendiendo led");
+          digitalWrite(led, HIGH);
+      } else if (newCommand == "apagar") {
+          Serial.println("Apagando led");
+          digitalWrite(led, LOW);
+      } else {
+          Serial.println("Comando desconocido: " + newCommand);
       }
-
-      if (newCommand == "apagar") {
-        digitalWrite(led, LOW);
-      }
-
-      if (newCommand == "") {
-        Serial.println("  Nothing new.");
-      }
-
     } else {
-      Serial.println("Estado raro: " + x);
+        Serial.println("Error al revisar la cola. Código HTTP: " + String(x));
     }
-
-    cliente.stop();
   }
 }
 
 void connect_WiFi() {
-// Attempt to connect to Wifi network:
   while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
+    Serial.print("Intentando conectar con SSID: ");
     Serial.println(ssid);
-    if(strlen(pass) == 0 && strlen(WEPkey) == 0){
-      // Connect without password (no security, no recommendad)
+    
+    if (strlen(pass) == 0 && strlen(WEPkey) == 0) {
       status = WiFi.begin(ssid);
-    }else if(strlen(pass) > 0 && strlen(WEPkey) == 0){
-      // Connect to WPA/WPA2 network
+    } else if (strlen(pass) > 0 && strlen(WEPkey) == 0) {
       status = WiFi.begin(ssid, pass);
-    }else if(strlen(WEPkeyIndex) > 0 && strlen(WEPkey) > 0){
-      // Connect to WEP network
+    } else if (strlen(WEPkeyIndex) > 0 && strlen(WEPkey) > 0) {
       status = WiFi.begin(ssid, pass, WEPkey);
-    }else{
-      Serial.println("Error with the data variables to connect to a specific network. Check ssid, pass, WEPkeyIndex, and WEPkey");
+    } else {
+      Serial.println("Error en los datos de conexión. Verifica SSID, pass, WEPkeyIndex y WEPkey.");
     }
-    // Wait 10 seconds for connection:
-    delay(10000);
+    
+    delay(10000); // Esperar 10 segundos
   }
 }
-void updateThingSpeak(String tsData, WiFiClient client) {
+
+void updateThingSpeak(String tsData) {
   lastConnectionTime = millis();
-  if (client.connect(thingSpeakAddress, 80)) {
-
-    client.print("POST /update HTTP/1.1\n");
-    client.print("Host: api.thingspeak.com\n");
-    client.print("Connection: close\n");
-    client.print("X-THINGSPEAKAPIKEY: " + apiKey + "\n");
-    client.print("Content-Type: application/x-www-form-urlencoded\n");
-    client.print("Content-Length: ");
-    client.print(tsData.length());
-    client.print("\n\n");
-    client.print(tsData);
-
-    // Leer la respuesta del servidor
-    // while (client.available()) {
-    //   String line = client.readStringUntil('\n');
-    //   Serial.println(line);  // Imprime la respuesta línea por línea
-    // }
-
-    // // Verificar si el cliente sigue conectado después de recibir la respuesta
-    // if (client.connected()) {
-    //   Serial.println("Conectado a ThingSpeak y respuesta recibida.");
-    // }
-
+  if (cliente.connect(thingSpeakAddress, 80)) {
+    cliente.print("POST /update HTTP/1.1\n");
+    cliente.print("Host: api.thingspeak.com\n");
+    cliente.print("Connection: close\n");
+    cliente.print("X-THINGSPEAKAPIKEY: " + apiKey + "\n");
+    cliente.print("Content-Type: application/x-www-form-urlencoded\n");
+    cliente.print("Content-Length: ");
+    cliente.print(tsData.length());
+    cliente.print("\n\n");
+    cliente.print(tsData);
   }
 }
 
-
-int updateLed(String uri, String postMessage, String &response, WiFiClient client) {
-  bool connectSuccess = false;
-  connectSuccess = client.connect("api.thingspeak.com", 80);
+int httpPOST(String uri, String postMessage, String &response) {
+  WiFiClient client;
+  bool connectSuccess = client.connect("api.thingspeak.com", 80);
 
   if (!connectSuccess) {
-    return -301;
+    return -301; // Error al conectar
   }
 
-  postMessage += "&headers=false";
-
-  String Headers =  String("PUT ") + uri + String(" HTTP/1.1\r\n") +
-                    String("Host: api.thingspeak.com\r\n") +
-                    String("Content-Type: application/x-www-form-urlencoded\r\n") +
-                    String("Connection: close\r\n") +
-                    String("Content-Length: ") + String(postMessage.length()) +
-                    String("\r\n\r\n");
+  String Headers = String("POST ") + uri + " HTTP/1.1\r\n" +
+                   "Host: api.thingspeak.com\r\n" +
+                   "Content-Type: application/x-www-form-urlencoded\r\n" +
+                   "Connection: close\r\n" +
+                   "Content-Length: " + String(postMessage.length()) + "\r\n\r\n";
 
   client.print(Headers);
   client.print(postMessage);
@@ -182,24 +154,22 @@ int updateLed(String uri, String postMessage, String &response, WiFiClient clien
   }
 
   if (client.available() == 0) {
-    return -304;
+    return -304; // Timeout
   }
 
-  if (!client.find(const_cast<char *>("HTTP/1.1"))) {
-    return -303;
+  if (!client.find("HTTP/1.1")) {
+    return -303; // Respuesta no válida
   }
 
   int status = client.parseInt();
   if (status != 200) {
-    return status;
+    return status; // Error HTTP
   }
 
-  if (!client.find(const_cast<char *>("\n\r\n"))) {
-    return -303;
+  if (!client.find("\n\r\n")) {
+    return -303; // Sin cuerpo en la respuesta
   }
 
-  String tempString = String(client.readString());
-  response = tempString;
-  //Serial.println(status);
-  return status;
+  response = client.readString();
+  return status; // 200 OK
 }
