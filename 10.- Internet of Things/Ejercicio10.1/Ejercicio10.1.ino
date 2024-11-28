@@ -12,7 +12,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 // Configuración de red Ethernet
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x05 }; // Dirección MAC única
-EthernetServer server(80);                          // Servidor en el puerto 80
+EthernetServer server(80);                           // Servidor en el puerto 80
 IPAddress dnsServer(8, 8, 8, 8);
 IPAddress gateway(192, 168, 61, completar);
 IPAddress subnet(255, 255, 255, 0);
