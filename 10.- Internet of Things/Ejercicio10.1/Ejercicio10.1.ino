@@ -1,51 +1,77 @@
-#include <ESP8266WiFi.h> // Usa ESP32WiFi.h si es un ESP32
-#include <ESP8266WebServer.h> // Usa WebServer.h si es un ESP32
+#include <SPI.h>
+#include <Ethernet.h>
 #include <DHT.h>
 
 // Configuración del sensor DHT11
-#define DHTPIN D4       // Pin donde está conectado el DHT11
-#define DHTTYPE DHT11   // Tipo de sensor DHT
+int pin_sensor = 5;    // Pin donde está conectado el DHT11
+#define DHTTYPE DHT11  // Tipo de sensor DHT
 DHT dht(DHTPIN, DHTTYPE);
 
 // Configuración del LED
-#define LEDPIN D2       // Pin donde está conectado el LED
+#define LEDPIN 2       // Pin donde está conectado el LED
 
-// Configuración de red Wi-Fi
-const char* ssid = "TuSSID";            // Reemplaza con tu SSID
-const char* password = "TuPassword";    // Reemplaza con tu contraseña
-
-// Crear servidor web
-ESP8266WebServer server(80);
+// Configuración de red Ethernet
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x05 }; // Dirección MAC única
+EthernetServer server(80);                          // Servidor en el puerto 80
+IPAddress dnsServer(8, 8, 8, 8);
+IPAddress gateway(192, 168, 61, completar);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress ip(192, 168, 61, completar);
 
 // Variables para los datos del sensor
+const double latitude = 43.36029;
+const double longitude = -5.84476;
+
 float temperature = 0.0;
 float humidity = 0.0;
 
-// Función para manejar la raíz
-void handleRoot() {
+// Función para manejar las solicitudes HTTP
+void handleClient(EthernetClient client) {
+  // Leer la solicitud HTTP
+  String request = client.readStringUntil('\r');
+  client.flush();
+
   // Actualizar datos del sensor
   temperature = dht.readTemperature();
   humidity = dht.readHumidity();
 
-  // Construir respuesta JSON
-  String json = "{";
-  json += "\"temperature\": " + String(temperature) + ",";
-  json += "\"humidity\": " + String(humidity) + "}";
-  
-  // Enviar respuesta
-  server.send(200, "application/json", json);
-}
-
-// Función para manejar el encendido del LED
-void handleLEDOn() {
-  digitalWrite(LEDPIN, HIGH);
-  server.send(200, "text/plain", "LED encendido");
-}
-
-// Función para manejar el apagado del LED
-void handleLEDOff() {
-  digitalWrite(LEDPIN, LOW);
-  server.send(200, "text/plain", "LED apagado");
+  // Procesar las rutas
+  if (request.indexOf("GET / ") >= 0) {
+    // Responder con datos del sensor en formato JSON
+    String json = "{";
+    json += "\"latitude\": " + String(latitude, 6) + ",";
+    json += "\"longitude\": " + String(longitude, 6) + ",";
+    json += "\"temperature\": " + String(temperature) + ",";
+    json += "\"humidity\": " + String(humidity) + "}";
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-Type: application/json");
+    client.println("Connection: close");
+    client.println();
+    client.println(json);
+  } else if (request.indexOf("GET /led/on") >= 0) {
+    // Encender LED
+    digitalWrite(LEDPIN, HIGH);
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-Type: text/plain");
+    client.println("Connection: close");
+    client.println();
+    client.println("LED encendido");
+  } else if (request.indexOf("GET /led/off") >= 0) {
+    // Apagar LED
+    digitalWrite(LEDPIN, LOW);
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-Type: text/plain");
+    client.println("Connection: close");
+    client.println();
+    client.println("LED apagado");
+  } else {
+    // Ruta no encontrada
+    client.println("HTTP/1.1 404 Not Found");
+    client.println("Content-Type: text/plain");
+    client.println("Connection: close");
+    client.println();
+    client.println("Ruta no encontrada");
+  }
 }
 
 void setup() {
@@ -59,28 +85,33 @@ void setup() {
   // Inicializar sensor DHT
   dht.begin();
 
-  // Conectar a Wi-Fi
-  Serial.print("Conectando a Wi-Fi...");
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print(".");
-  }
-  Serial.println("\nConectado a Wi-Fi.");
-  Serial.print("Dirección IP: ");
-  Serial.println(WiFi.localIP());
+  // Iniciar conexión Ethernet
+  Serial.println("Iniciando Ethernet...");
+  Ethernet.begin(mac, ip);
 
-  // Configurar rutas del servidor
-  server.on("/", handleRoot);           // Ruta para datos del sensor
-  server.on("/led/on", handleLEDOn);    // Ruta para encender LED
-  server.on("/led/off", handleLEDOff);  // Ruta para apagar LED
+  // Verificar conexión Ethernet
+  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+    Serial.println("No se encontró un hardware Ethernet.");
+    while (true);
+  }
+  if (Ethernet.linkStatus() == LinkOFF) {
+    Serial.println("Cable Ethernet no conectado.");
+  }
 
   // Iniciar servidor
   server.begin();
-  Serial.println("Servidor iniciado.");
+  Serial.print("Servidor iniciado. Dirección IP: ");
+  Serial.println(Ethernet.localIP());
 }
 
 void loop() {
-  // Manejar solicitudes HTTP
-  server.handleClient();
+  // Aceptar conexiones de clientes
+  EthernetClient client = server.available();
+  if (client) {
+    Serial.println("Nuevo cliente conectado.");
+    handleClient(client);
+    delay(1); // Dar tiempo para enviar datos al cliente
+    client.stop();
+    Serial.println("Cliente desconectado.");
+  }
 }
