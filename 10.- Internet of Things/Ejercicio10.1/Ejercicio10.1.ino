@@ -11,8 +11,8 @@ DHT dht(DHTPIN, DHTTYPE);
 #define LEDPIN D2       // Pin donde está conectado el LED
 
 // Configuración de red Wi-Fi
-const char* ssid = "TuSSID";       // Reemplaza con tu SSID
-const char* password = "TuPassword"; // Reemplaza con tu contraseña
+const char* ssid = "TuSSID";            // Reemplaza con tu SSID
+const char* password = "TuPassword";    // Reemplaza con tu contraseña
 
 // Crear servidor web
 ESP8266WebServer server(80);

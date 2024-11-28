@@ -40,15 +40,16 @@
       <th>Nombre</th>
       <th>Temperatura</th>
       <th>Humedad</th>
+      <th>Acciones</th>
     </tr>
   </table>
 
   <script>
     // Sensores fake con ubicaciones predefinidas
     const SENSORS = [
-      { id: 1, ip: "192.168.1.1", name: "Sensor Parque", location: [43.36029, -5.84476], temperature: 0, humidity: 0 },
-      { id: 2, ip: "192.168.1.2", name: "Sensor Centro", location: [43.36145, -5.84936], temperature: 0, humidity: 0 },
-      { id: 3, ip: "192.168.1.3", name: "Sensor Estación", location: [43.35856, -5.85172], temperature: 0, humidity: 0 },
+      { id: 1, ip: "http://192.168.1.1", name: "Sensor Parque", location: [43.36029, -5.84476], temperature: 0, humidity: 0 },
+      { id: 2, ip: "http://192.168.1.2", name: "Sensor Centro", location: [43.36145, -5.84936], temperature: 0, humidity: 0 },
+      { id: 3, ip: "http://192.168.1.3", name: "Sensor Estación", location: [43.35856, -5.85172], temperature: 0, humidity: 0 },
     ];
 
     // Inicializar mapa con Leaflet
@@ -88,6 +89,7 @@
           <th>Nombre</th>
           <th>Temperatura</th>
           <th>Humedad</th>
+          <th>Acciones</th>
         </tr>
       `;
 
@@ -97,6 +99,10 @@
             <td>${sensor.name}</td>
             <td>${sensor.temperature} °C</td>
             <td>${sensor.humidity} %</td>
+            <td>
+              <button onclick="toggleLED(${sensor.id}, 'ON')">Encender LED</button>
+              <button onclick="toggleLED(${sensor.id}, 'OFF')">Apagar LED</button>
+            </td>
           </tr>
         `;
         table.innerHTML += row;
@@ -107,7 +113,12 @@
     function toggleLED(sensorId, command) {
       const sensor = SENSORS.find(s => s.id === sensorId);
       if (sensor) {
-        alert(`LED del ${sensor.name} está ${command}`);
+        const url = `${sensor.ip}/led/${command.toLowerCase()}`;
+        
+        fetch(url)
+          .then(response => response.text())
+          .then(data => alert(`LED del ${sensor.name} está ${command}`))
+          .catch(error => alert("Error al controlar el LED: " + error));
       }
     }
 
