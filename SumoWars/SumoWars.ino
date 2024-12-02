@@ -48,6 +48,8 @@ void loop() {
   Serial.println(cm);
   if (cm <= 50) {
     forward();
+  } else if (digitalRead(left_sensor) == HIGH && digitalRead(right_sensor) == HIGH){
+    backwards();
   } else {
     garen();
   }
@@ -71,6 +73,11 @@ int ping(int trigger_pin, int echo_pin) {
 void forward() {
   servoRight.write(RIGHT_FORWARD);
   servoLeft.write(LEFT_FORWARD);
+}
+
+void backwards() {
+  servoRight.write(RIGHT_BACKWARD);
+  servoLeft.write(LEFT_BACKWARD);
 }
 
 void garen(int turn) {
