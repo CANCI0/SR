@@ -52,7 +52,7 @@
     const SENSORS = [
       { id: 1, ip: "192.168.1.1", name: "Sensor Parque", location: [43.36029, -5.84476], temperature: 0, humidity: 0 },
       { id: 2, ip: "192.168.1.2", name: "Sensor Centro", location: [43.36145, -5.84936], temperature: 0, humidity: 0 },
-      { id: 3, ip: "192.168.1.3", name: "Sensor Estación", location: [43.35856, -5.85172], temperature: 0, humidity: 0 },
+      { id: 3, ip: "192.168.56.109", name: "Sensor Estación", location: [43.35494, -5.85123], temperature: 0, humidity: 0 },
     ];
 
     // Inicializar mapa con Leaflet
@@ -66,20 +66,32 @@
 
     // Función para actualizar datos de sensores
     function updateSensors() {
-      SENSORS.forEach(sensor => {
-        // Generar datos aleatorios para temperatura y humedad
-        sensor.temperature = (15 + Math.random() * 20).toFixed(1); // 15°C a 35°C
-        sensor.humidity = (40 + Math.random() * 50).toFixed(1);    // 40% a 90%
+      SENSORS.forEach(async sensor => {
+      
+        if(sensor.ip == "192.168.56.109"){
+          sensor.marker.setPopupContent(`
+            <b>${sensor.name}</b><br>
+            IP: ${sensor.ip}<br>
+            Temperatura: ${sensor.temperature} °C<br>
+            Humedad: ${sensor.humidity} %<br>
+            <button onclick="toggleLED(${sensor.id}, 'ON')">Encender</button>
+            <button onclick="toggleLED(${sensor.id}, 'OFF')">Apagar</button>
+          `);
+        } else {
+          // Generar datos aleatorios para temperatura y humedad
+          sensor.temperature = (15 + Math.random() * 20).toFixed(1); // 15°C a 35°C
+          sensor.humidity = (40 + Math.random() * 50).toFixed(1);    // 40% a 90%
 
-        // Actualizar popup en el mapa
-        sensor.marker.setPopupContent(`
-          <b>${sensor.name}</b><br>
-          IP: ${sensor.ip}<br>
-          Temperatura: ${sensor.temperature} °C<br>
-          Humedad: ${sensor.humidity} %<br>
-          <button onclick="toggleLED(${sensor.id}, 'ON')">Encender</button>
-          <button onclick="toggleLED(${sensor.id}, 'OFF')">Apagar</button>
-        `);
+          // Actualizar popup en el mapa
+          sensor.marker.setPopupContent(`
+            <b>${sensor.name}</b><br>
+            IP: ${sensor.ip}<br>
+            Temperatura: ${sensor.temperature} °C<br>
+            Humedad: ${sensor.humidity} %<br>
+            <button onclick="toggleLED(${sensor.id}, 'ON')">Encender</button>
+            <button onclick="toggleLED(${sensor.id}, 'OFF')">Apagar</button>
+          `);
+        }
       });
       updateTable();
     }
@@ -115,10 +127,23 @@
       if (sensor) {
         const url = `http://${sensor.ip}/led/${command.toLowerCase()}`;
         
-        fetch(url)
+        fetch(url, {mode: 'no-cors'})
           .then(response => response.text())
           .then(data => alert(`LED del ${sensor.name} está ${command}`))
-          .catch(error => alert("Error al controlar el LED: " + error));
+      }
+    }
+
+    async function getData(sensorId) {
+      const sensor = SENSORS.find(s => s.id === sensorId);
+      if (sensor) {
+        const url = `http://${sensor.ip}/data`;
+        
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            sensor.temperature = data.temperature
+            sensor.humidity = data.humidity
+          })
       }
     }
 
