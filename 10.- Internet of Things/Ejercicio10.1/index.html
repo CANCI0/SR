@@ -49,10 +49,11 @@
 
   <script>
     // Sensores fake con ubicaciones predefinidas
+    sens = { id: 3, ip: "156.35.98.93", name: "Sensor Estación", location: [43.35494, -5.85123], temperature: 0, humidity: 0 } 
     const SENSORS = [
       { id: 1, ip: "192.168.1.1", name: "Sensor Parque", location: [43.36029, -5.84476], temperature: 0, humidity: 0 },
       { id: 2, ip: "192.168.1.2", name: "Sensor Centro", location: [43.36145, -5.84936], temperature: 0, humidity: 0 },
-      { id: 3, ip: "192.168.56.109", name: "Sensor Estación", location: [43.35494, -5.85123], temperature: 0, humidity: 0 },
+      sens,
     ];
 
     // Inicializar mapa con Leaflet
@@ -66,9 +67,9 @@
 
     // Función para actualizar datos de sensores
     function updateSensors() {
+      getData()
       SENSORS.forEach(async sensor => {
-      
-        if(sensor.ip == "192.168.56.109"){
+        if(sensor.ip == "156.35.98.93"){
           sensor.marker.setPopupContent(`
             <b>${sensor.name}</b><br>
             IP: ${sensor.ip}<br>
@@ -105,6 +106,7 @@
           <th>IP</th>
           <th>Temperatura</th>
           <th>Humedad</th>
+          <th>Alerta</th>
         </tr>
       `;
 
@@ -115,6 +117,12 @@
             <td>${sensor.ip}</td>
             <td>${sensor.temperature} °C</td>
             <td>${sensor.humidity} %</td>
+            <td>${if(sensor.temperature > 30){
+                  return "ALERTA"
+                } else{
+                  return ""
+                }
+            } %</td>
           </tr>
         `;
         table.innerHTML += row;
@@ -133,18 +141,15 @@
       }
     }
 
-    async function getData(sensorId) {
-      const sensor = SENSORS.find(s => s.id === sensorId);
-      if (sensor) {
-        const url = `http://${sensor.ip}/data`;
-        
-        fetch(url)
-          .then(response => response.json())
-          .then(data => {
-            sensor.temperature = data.temperature
-            sensor.humidity = data.humidity
-          })
-      }
+    async function getData() {
+      const url = `http://${sens.ip}/`;
+      
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          sens.temperature = data.temperature
+          sens.humidity = data.humidity
+        })
     }
 
     // Actualizar sensores cada 5 segundos
