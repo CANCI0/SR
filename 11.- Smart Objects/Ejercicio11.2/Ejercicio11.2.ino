@@ -59,6 +59,8 @@ void setup() {
   connect_WiFi();
 }
 
+int aaa = LOW;
+
 void loop() {
   if (cliente || millis() - lastConnectionTime > updateThingSpeakInterval) {
     float luz = analogRead(sensor);
@@ -82,14 +84,14 @@ void loop() {
     
     if (x == 200) {
       Serial.println("Revisando cola de comandos...");
-      if (newCommand == "encender") {
-          Serial.println("Encendiendo led");
+      if (aaa == LOW) {
+          Serial.println("Comando: encender");
           digitalWrite(led, HIGH);
-      } else if (newCommand == "apagar") {
-          Serial.println("Apagando led");
+          aaa = HIGH;
+      } else if (aaa == HIGH) {
+          Serial.println("Comando: apagar");
           digitalWrite(led, LOW);
-      } else {
-          Serial.println("Comando desconocido: " + newCommand);
+          aaa = LOW;
       }
     } else {
         Serial.println("Error al revisar la cola. Código HTTP: " + String(x));
@@ -170,6 +172,6 @@ int httpPOST(String uri, String postMessage, String &response) {
     return -303; // Sin cuerpo en la respuesta
   }
 
-  response = client.readString();
+  response = String(client.readString());
   return status; // 200 OK
 }
